@@ -1,0 +1,19 @@
+#!/bin/bash
+
+if [ $# - ne 2]; then
+	echo "Invalid number of arguments" >&2
+	exit 1
+fi
+
+cat $1 | while read nextLine; do
+	if [ ! -r "nextLine.in" ] ; then
+		echo "File not found" >&2
+		exit 1
+	fi
+		output=`valgrind --log-fd=1 --leak-check=full --show-reachable-yes $2 < $nextLine.in`
+		errorCheck=`echo "$output" | tail -1 | egrep -c '.*ERROR SUMMARY: [1-9]*.'`
+		if [ $errorCheck -eq 1 ]; then
+			echo "Memory leak detected: $nextLine.in"
+			echo "$output"
+		fi
+done
